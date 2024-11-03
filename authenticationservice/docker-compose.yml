@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+
+  my-sba-authentication:
+    image: bellsoft/liberica-openjdk-alpine:17
+    container_name: mysbaimage-authentication
+    ports:
+      - 8091:8080
+      - 8011:8000
+    expose:
+      - "8011"
+    depends_on:
+      - my-db-authentication
+    networks:
+      - my-net
+    volumes:
+      - ./build/libs/AuthenticationService-0.0.1-SNAPSHOT.jar:/app/app.jar
+    working_dir: /app
+    entrypoint: java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000 -jar /app/app.jar
+
+
+  my-db-authentication:
+    image: mongo:5.0
+    container_name: mongodbimage-authentication
+    ports:
+      - 27032:27032
+    command: ["mongod", "--port", "27032"]
+    networks:
+      - my-net
+
+networks:
+  my-net:
+    driver: "bridge"
+

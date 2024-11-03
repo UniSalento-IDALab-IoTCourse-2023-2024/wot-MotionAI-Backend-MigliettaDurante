@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+
+  my-sba-prediction:
+    image: bellsoft/liberica-openjdk-alpine:17
+    container_name: mysbaimage-prediction
+    ports:
+      - 8090:8080
+      - 8010:8000
+    expose:
+      - "8010"
+    depends_on:
+      - my-db-prediction
+    networks:
+      - my-net
+    volumes:
+      - ./build/libs/predictionservice-0.0.1-SNAPSHOT.jar:/app/app.jar
+    working_dir: /app
+    entrypoint: java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000 -jar /app/app.jar
+
+
+  my-db-prediction:
+    image: mongo:5.0
+    container_name: mongodbimage-prediction
+    ports:
+      - 27031:27031
+    command: ["mongod", "--port", "27031"]
+    networks:
+      - my-net
+
+networks:
+  my-net:
+    driver: "bridge"
+
