@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import static it.unisalento.recproject.authenticationservice.configuration.SecurityConfig.passwordEncoder;
+
+
 @RestController
 @RequestMapping("/api/user")
 public class UserRestController {
@@ -72,7 +75,7 @@ public class UserRestController {
         user.setNome(userDTO.getNome());
         user.setCognome(userDTO.getCognome());
         user.setDataNascita(userDTO.getDataNascita());
-        user.setPassword(userDTO.getPassword());
+        user.setPassword(passwordEncoder().encode(userDTO.getPassword()));
 
         userRepository.save(user);
 

@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface PredictionRepository extends MongoRepository<Prediction, String> {
     List<Prediction> findByUserEmail(String userEmail);
-
 }
