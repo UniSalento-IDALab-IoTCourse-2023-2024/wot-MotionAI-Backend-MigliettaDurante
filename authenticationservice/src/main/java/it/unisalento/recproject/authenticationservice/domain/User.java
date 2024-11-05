@@ -3,8 +3,6 @@ package it.unisalento.recproject.authenticationservice.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
-
 @Document("user")
 public class User {
 

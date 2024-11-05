@@ -82,4 +82,36 @@ public class UserRestController {
         userDTO.setId(user.getId());
         return ResponseEntity.ok(userDTO);
     }
+
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public ResponseEntity<?> get(HttpServletRequest request) {
+
+        String authorizationHeader = request.getHeader("Authorization");
+
+        String email;
+        String jwt;
+
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            jwt = authorizationHeader.substring(7);
+            email = jwtUtilities.extractUsername(jwt);
+        }
+        else
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token non valido");
+
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        UserDTO userDTO = new UserDTO();
+
+        userDTO.setId(user.getId());
+        userDTO.setNome(user.getNome());
+        userDTO.setCognome(user.getCognome());
+        userDTO.setDataNascita(user.getDataNascita());
+        userDTO.setEmail(user.getEmail());
+
+        return ResponseEntity.ok(userDTO);
+    }
 }
