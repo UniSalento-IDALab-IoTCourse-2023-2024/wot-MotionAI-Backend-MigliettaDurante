@@ -37,7 +37,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.cors().and().csrf().disable()
-                .authorizeRequests().requestMatchers("/api/login/","/api/login/passwordDimenticata/{email}", "/api/registrazione/**").permitAll().
+                .authorizeRequests().requestMatchers("/api/login/","/api/registrazione/**", "/api/user/getAll").permitAll().
                 requestMatchers("/api/amministratore/**").hasRole("ADMIN").requestMatchers("/api/produttore/**").hasRole("PRODUTTORE").
                 requestMatchers("/api/users/**").hasRole("USER").
                 anyRequest().authenticated().and().sessionManagement()

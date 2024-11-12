@@ -1,10 +1,11 @@
 package it.unisalento.iotproject.predictionservice.restcontrollers;
 
-
 import it.unisalento.iotproject.predictionservice.domain.Prediction;
+import it.unisalento.iotproject.predictionservice.dto.ActivityDurationDTO;
 import it.unisalento.iotproject.predictionservice.dto.ListPredictionDTO;
 import it.unisalento.iotproject.predictionservice.dto.PredictionDTO;
 import it.unisalento.iotproject.predictionservice.repository.PredictionRepository;
+import it.unisalento.iotproject.predictionservice.response.MessageResponse;
 import it.unisalento.iotproject.predictionservice.security.AuthorizationAPI;
 import it.unisalento.iotproject.predictionservice.security.JwtUtilities;
 import it.unisalento.iotproject.predictionservice.service.PredictionService;
@@ -13,11 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-import java.time.LocalDateTime;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -45,28 +43,29 @@ public class PredictionRestController {
             String userEmail = jwtUtilities.extractUsername(request.getHeader("Authorization").substring(7));
 
             if (predictionDTO.getUserEmail() != null && !predictionDTO.getUserEmail().equals(userEmail)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authorized");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse("User not authorized"));
             }
 
             Prediction prediction = new Prediction();
 
             prediction.setUserEmail(userEmail);
-            prediction.setDate(predictionDTO.getDate());
 
             if (predictionDTO.getPrediction() == null || predictionDTO.getDeviceId() == null || predictionDTO.getDate() == null) {
-                return ResponseEntity.badRequest().body("Missing prediction or deviceId or date");
+                return ResponseEntity.badRequest().body(new MessageResponse("Missing prediction or deviceId or date"));
             }
 
+            prediction.setDate(predictionDTO.getDate());
             prediction.setPrediction(predictionDTO.getPrediction());
+            prediction.setDuration(predictionDTO.getDuration());
             prediction.setDeviceId(predictionDTO.getDeviceId());
 
             prediction = predictionRepository.save(prediction);
 
             predictionDTO.setId(prediction.getId());
 
-            return ResponseEntity.ok("Prediction inserted successfully");
+            return ResponseEntity.ok(new MessageResponse("Prediction inserted successfully"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error inserting prediction");
+            return ResponseEntity.badRequest().body(new MessageResponse("Error inserting prediction"));
         }
     }
 
@@ -77,7 +76,6 @@ public class PredictionRestController {
         authorizationAPI.checkAuthorizationRole(request, jwtUtilities);
 
         try {
-
             ArrayList<PredictionDTO> list = new ArrayList<>();
             ListPredictionDTO listPredictionDTO = new ListPredictionDTO();
 
@@ -85,19 +83,22 @@ public class PredictionRestController {
 
             List<Prediction> predictions = predictionRepository.findByUserEmail(email).stream()
                     .sorted((p1, p2) -> {
-                        LocalDateTime date1 = LocalDateTime.parse(p1.getDate(), DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
-                        LocalDateTime date2 = LocalDateTime.parse(p2.getDate(), DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
+                        LocalDate date1 = LocalDate.parse(p1.getDate(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                        LocalDate date2 = LocalDate.parse(p2.getDate(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
                         return date2.compareTo(date1);
                     })
                     .toList();
 
             for (Prediction prediction : predictions) {
                 PredictionDTO predictionDTO = new PredictionDTO();
+
                 predictionDTO.setId(prediction.getId());
                 predictionDTO.setUserEmail(prediction.getUserEmail());
                 predictionDTO.setDeviceId(prediction.getDeviceId());
                 predictionDTO.setPrediction(prediction.getPrediction());
+                predictionDTO.setDuration(prediction.getDuration());
                 predictionDTO.setDate(prediction.getDate());
+
                 list.add(predictionDTO);
             }
 
@@ -123,9 +124,9 @@ public class PredictionRestController {
 
             predictionRepository.deleteAll(predictions);
 
-            return ResponseEntity.ok("Predictions deleted successfully");
+            return ResponseEntity.ok(new MessageResponse("Predictions deleted successfully"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error deleting predictions");
+            return ResponseEntity.badRequest().body(new MessageResponse("Predictions deleted successfully"));
         }
     }
 
@@ -135,11 +136,30 @@ public class PredictionRestController {
     }
 
     @RequestMapping(value = "/getTodayActivityDurations", method = RequestMethod.GET)
-    public ResponseEntity<?> getTodayActivityDurations(HttpServletRequest request) {
+    public ResponseEntity<?> getTodayActivityDurations(@RequestParam(value = "date", required = false) String date, HttpServletRequest request) {
         try {
-            return predictionService.getActivityDurationsForToday(request);
+            return predictionService.getActivityDurationsForToday(request, date);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error getting today's activity durations");
+        }
+    }
+
+    @RequestMapping(value = "/getActivityByUser", method = RequestMethod.GET)
+    public ResponseEntity<?> getActivityDurationHistory(HttpServletRequest request) {
+        AuthorizationAPI authorizationAPI = new AuthorizationAPI();
+        authorizationAPI.checkAuthorizationRole(request, jwtUtilities);
+
+        try {
+
+            String userEmail = jwtUtilities.extractUsername(request.getHeader("Authorization").substring(7));
+
+            List<ActivityDurationDTO> activity = predictionRepository.aggregateDurationsByDayAndUser(userEmail);
+
+            return ResponseEntity.ok(activity);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error getting activity duration history");
         }
     }
 }

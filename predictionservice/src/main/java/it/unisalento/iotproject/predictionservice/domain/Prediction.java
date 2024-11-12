@@ -12,15 +12,18 @@ public class Prediction {
     private String userEmail;
     private String deviceId;
     private String prediction;
+    private Long duration;
     private String date;
 
     public Prediction() {
     }
 
-    public Prediction(String userEmail, String deviceId, String prediction, String date) {
+    public Prediction(String id, String userEmail, String deviceId, String prediction, Long duration, String date) {
+        this.id = id;
         this.userEmail = userEmail;
         this.deviceId = deviceId;
         this.prediction = prediction;
+        this.duration = duration;
         this.date = date;
     }
 
@@ -50,6 +53,14 @@ public class Prediction {
 
     public String getPrediction() {
         return prediction;
+    }
+
+    public Long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Long duration) {
+        this.duration = duration;
     }
 
     public void setPrediction(String prediction) {
