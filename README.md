@@ -1,7 +1,12 @@
-# wot-MotionAI-Backend-MigliettaDurante
+# Human Activity Recognition mediante SensorTile.box PRO di STMicroelectronics (Backend)
 
 ## Descrizione del progetto
-Il progetto consiste in un backend per un'applicazione Android, composto da due microservizi:
+Il progetto Human Activity Recognition (HAR) implementa un sistema di riconoscimento delle attività 
+umane basato su Edge Computing, con l'uso della SensorTile.box PRO di STMicroelectronics. Il sistema 
+è in grado di rilevare in tempo reale attività come camminare, correre, fermarsi e guidare effettuando 
+l'inferenza direttamente sulla SensorTile.box PRO e/o sullo smartphone sul quale si sta eseguendo 
+l'applicazione. In particolare, all'interno di questa repository è presente il backend del progetto, 
+realizzato mediante un'architettura a microservizi. Esso è composto da due microservizi:
 
 - **authenticationservice**:  
   Microservizio responsabile della gestione della registrazione e del login degli utenti, nonché della gestione dei dati relativi al proprio account.
